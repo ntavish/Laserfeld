@@ -1,3 +1,6 @@
+#tavish naruka
+#based on http://cs.simpson.edu/?q=sprite_collect_circle.py
+
 import pygame
 import random, math
  
@@ -5,6 +8,7 @@ import random, math
 black    = (   0,   0,   0)
 white    = ( 255, 255, 255)
 red      = ( 255,   0,   0)
+green    = ( 70, 170, 0)
 
 class Laser(pygame.sprite.Sprite):
     def __init__(self, color, x1, y1, x2, y2):
@@ -12,12 +16,12 @@ class Laser(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         
         self.image = pygame.Surface([math.fabs(x2-x1), math.fabs(y2-y1)])
-        self.image.fill(white)
-        self.image.set_colorkey(white)
+        #self.image.fill(white)
+        #self.image.set_colorkey(white)
         
-        pygame.draw.line(self.image, white, (x1, y1), (x2,y2), 1)
-        pygame.draw.line(screen, red, (x1, y1), (x2,y2), 1)     
-        self.rect=self.image.get_rect()
+        #pygame.draw.line(self.image, white, (x1, y1), (x2,y2), 3)
+        pygame.draw.line(screen, red, (x1, y1), (x2,y2), 3)     
+        self.rect=pygame.Rect(x1,y1,x2-x1,y2-y1)
 
 #class represents the ball        
 # It derives from the "Sprite" class in Pygame
@@ -28,7 +32,7 @@ class Block(pygame.sprite.Sprite):
     
     # laser angle
     angle = 0.1#random.randrange(360)
-    rate = 0.01 #degrees per frame
+    rate = 0.002 #degrees per frame
     
     #speed of approach
     speed = 2.0
@@ -65,7 +69,7 @@ block_list = pygame.sprite.RenderPlain()
 # This is a list of every sprite. All blocks and the player block as well.
 all_sprites_list = pygame.sprite.RenderPlain()
  
-for i in range(20):
+for i in range(4):
     # This represents a block
     block = Block(black, 20, 20)
  
@@ -80,7 +84,7 @@ for i in range(20):
      
  
 # Create a red player block
-player = Block(red, 20, 20)
+player = Block(green, 20, 20)
 all_sprites_list.add(player)
 
 #laser list
@@ -94,7 +98,7 @@ done=False
 clock=pygame.time.Clock()
  
 score = 0
- 
+c=0
 # -------- Main Program Loop -----------
 while done==False:
     for event in pygame.event.get(): # User did something
@@ -114,12 +118,11 @@ while done==False:
     player.rect.x=pos[0]
     player.rect.y=pos[1]
     
-    lasers.empty()
     for i in block_list:
         angle = math.atan2(-(i.rect.y - pos[1]), -(i.rect.x - pos[0]))
         i.rect.x += i.speed*math.cos(angle)
         i.rect.y += i.speed*math.sin(angle)
-        print math.cos(angle)
+        
         delta = angle-i.angle
         if delta <= 0:
             delta += math.pi*2
@@ -132,23 +135,16 @@ while done==False:
         #bring i.angle to \/
         i.angle = math.atan2(math.sin(i.angle),math.cos(i.angle))
         #angle is -0 to -pi for 0 to 180 and 0 to pi for -0 to -180
-
         #print str(angle) +" "+str(i.angle)
-        lasers.add(Laser(red, i.rect.x+10, i.rect.y+10, pos[0]+10+700*math.cos(i.angle), pos[1]+10+700*math.sin(i.angle)))
-    
+        laser= Laser(red, i.rect.x+10, i.rect.y+10, i.rect.x+10+1000*math.cos(i.angle), i.rect.y+10+1000*math.sin(i.angle))
+        d = float(math.fabs(laser.rect.width*(laser.rect.y-pos[1])-(laser.rect.x-pos[0])*(laser.rect.height)))/(float(laser.rect.width**2+laser.rect.height**2))**0.5
+        if d < 5.0 and pygame.sprite.collide_rect(player, laser):
+            print c
+            c=c+1
     
     # See if the player block has collided with anything.
     blocks_hit_list = pygame.sprite.spritecollide(player, (block_list), True)  
     
-    #laser collision
-    for i in lasers:
-        #if distance is less then 5 units, laser has hit
-        d = float(math.fabs(i.rect.width*(i.rect.y-pos[1])-(i.rect.x-pos[0])*(i.rect.height)))/(float(i.rect.width**2+i.rect.height**2))**0.5
-        if d < 5 and pygame.sprite.collide_rect(player, i):
-            #if player inside rectangle of laser
-            #print "collided dude " + str(d)
-            pass
-
     # Check the list of collisions.
     if len(blocks_hit_list) > 0:
         score +=len(blocks_hit_list)
@@ -158,7 +154,7 @@ while done==False:
     all_sprites_list.draw(screen)
      
     # Limit to 20 frames per second
-    clock.tick(20)
+    clock.tick(30)
  
     # Go ahead and update the screen with what we've drawn.
     pygame.display.flip()
