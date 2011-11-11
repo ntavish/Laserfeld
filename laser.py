@@ -27,11 +27,11 @@ class Block(pygame.sprite.Sprite):
     # and its x and y position
     
     # laser angle
-    angle = 0#random.randrange(360)
-    rate = 5 #degrees per frame
+    angle = 0.1#random.randrange(360)
+    rate = 0.01 #degrees per frame
     
     #speed of approach
-    speed = 5
+    speed = 2.0
     
     def __init__(self, color, width, height):
         # Call the parent class (Sprite) constructor
@@ -65,7 +65,7 @@ block_list = pygame.sprite.RenderPlain()
 # This is a list of every sprite. All blocks and the player block as well.
 all_sprites_list = pygame.sprite.RenderPlain()
  
-for i in range(1):
+for i in range(20):
     # This represents a block
     block = Block(black, 20, 20)
  
@@ -119,10 +119,22 @@ while done==False:
         angle = math.atan2(-(i.rect.y - pos[1]), -(i.rect.x - pos[0]))
         i.rect.x += i.speed*math.cos(angle)
         i.rect.y += i.speed*math.sin(angle)
+        print math.cos(angle)
+        delta = angle-i.angle
+        if delta <= 0:
+            delta += math.pi*2
         
-               
+        if delta < math.pi:
+            i.angle += i.rate*(delta+math.pi)
+        else:
+            i.angle -= i.rate*(delta)
+         
+        #bring i.angle to \/
+        i.angle = math.atan2(math.sin(i.angle),math.cos(i.angle))
+        #angle is -0 to -pi for 0 to 180 and 0 to pi for -0 to -180
+
         #print str(angle) +" "+str(i.angle)
-        lasers.add(Laser(red, i.rect.x+10, i.rect.y+10, pos[0]+10+1000*math.cos(angle), pos[1]+10+1000*math.sin(angle)))
+        lasers.add(Laser(red, i.rect.x+10, i.rect.y+10, pos[0]+10+700*math.cos(i.angle), pos[1]+10+700*math.sin(i.angle)))
     
     
     # See if the player block has collided with anything.
@@ -134,7 +146,8 @@ while done==False:
         d = float(math.fabs(i.rect.width*(i.rect.y-pos[1])-(i.rect.x-pos[0])*(i.rect.height)))/(float(i.rect.width**2+i.rect.height**2))**0.5
         if d < 5 and pygame.sprite.collide_rect(player, i):
             #if player inside rectangle of laser
-            print "collided dude " + str(d)
+            #print "collided dude " + str(d)
+            pass
 
     # Check the list of collisions.
     if len(blocks_hit_list) > 0:
